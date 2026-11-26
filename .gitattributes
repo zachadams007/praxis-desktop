@@ -1,0 +1,2 @@
+# Source-scan tests read their own files with include_str!, so line endings must match on every platform.
+* text=auto eol=lf

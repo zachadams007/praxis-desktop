@@ -1,0 +1,8 @@
+# The default rules read constants such as HALT_KEY = "praxis.halted.v1" as API keys.
+# They are names of browser storage entries.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "browser storage entry names"
+regexes = ['''praxis[.\-][A-Za-z.\-]+\.v\d''']
