@@ -1,0 +1,20 @@
+{
+  "id": "delegate",
+  "label": "Delegate — parallel build from one work-order",
+  "waves": [
+    {
+      "label": "build",
+      "lanes": [
+        {
+          "id": "primary",
+          "driver": "claude",
+          "model": "{model}",
+          "prompt": "You are a Praxis build lane. Work-order: {goal}\n\nImplement this end-to-end in the repository at your working directory. Make real, working changes — no placeholders or stubs. When done, ensure the project still builds. Working directory: {cwd}",
+          "cwd": "{cwd}",
+          "verify": "npx tsc --noEmit",
+          "timeoutSecs": 2700
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+[package]
+name = "praxis"
+version = "0.18.10"
+description = "Praxis — a personal AI operating system"
+authors = ["Zach"]
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "praxis_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-single-instance = "2"
+# Board Meeting digest - fires a native toast the moment the 6am (or catch-up) digest
+# is generated (board_meeting.rs / boardMeeting.ts). Official Tauri plugin, v2-current.
+tauri-plugin-notification = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+notify = "6"
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "process", "time", "macros"] }
+# Sync WebSocket client for the Hermes observer OS thread (no async runtime overhead).
+# Default features include `handshake` (provides tungstenite::connect); Hermes WS is plain ws:// so no TLS needed.
+tungstenite = "0.24"
+# Groq STT (Whisper) over HTTPS. Default features keep native-tls → Windows SChannel, so
+# there's no OpenSSL/CMake build dependency (local whisper.cpp needs CMake, which isn't installed).
+reqwest = { version = "0.12", features = ["multipart", "json"] }
+# Read-only access to Cursor's globalStorage/state.vscdb (SQLite WAL db).
+# `bundled` compiles a vendored copy of SQLite so there is no system-SQLite
+# dependency on Windows (where the system doesn't ship one).
+rusqlite = { version = "0.31", features = ["bundled"] }
+# QA "eyes" - Windows UIAutomation for finding a window by title + capturing a full-window
+# PNG. `screenshot` (new in 0.25) pulls the GDI + PNG-encode path; `process` enables the
+# window/process helpers. Windows-only crate, so scope it to the target to keep other
+# platforms buildable (matches how the app is a Windows desktop app).
+[target.'cfg(windows)'.dependencies]
+uiautomation = { version = "0.25", features = ["screenshot", "process"] }
+# Input synthesis (SendInput) for the visible computer-use operator: after Praxis
+# focuses Codex Desktop it injects Ctrl+V + Enter to auto-submit the @Computer
+# prompt. 0.6.1 verified current on crates.io 2026-07-02.
+enigo = "0.6.1"
+# DPAPI current-user encryption for `%LOCALAPPDATA%\Praxis\vault.dat`.
+# + Gdi/Com/Media_Ocr/Graphics_Imaging/Security_Cryptography: screen_ocr.rs reads a control label off the screen when UI Automation cannot see it.
+windows = { version = "0.58", features = ["Win32_Foundation", "Win32_Security_Cryptography", "Win32_Storage_FileSystem", "Win32_System_Threading", "Win32_Graphics_Gdi", "Win32_System_Com", "Foundation", "Foundation_Collections", "Graphics_Imaging", "Media_Ocr", "Security_Cryptography", "Storage_Streams"] }
+# Screen-frame capture for the watch-me/screen-share observe mode (screen_capture.rs).
+windows-capture = "2.0.0"
+image = { version = "0.25.10", default-features = false, features = ["jpeg"] }
+
+[dependencies.base64]
+# Base64-encode the captured PNG for the OpenRouter vision data URL. Already resolved in the
+# lock (transitive via reqwest), so this adds no new download.
+version = "0.22"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

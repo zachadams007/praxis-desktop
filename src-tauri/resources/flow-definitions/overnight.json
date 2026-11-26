@@ -1,0 +1,46 @@
+{
+  "id": "overnight",
+  "label": "Overnight — build, verify, report",
+  "waves": [
+    {
+      "label": "build",
+      "lanes": [
+        {
+          "id": "build",
+          "driver": "claude",
+          "model": "{model}",
+          "prompt": "You are the Praxis overnight BUILD lane. Goal: {goal}\n\nImplement this fully and autonomously in the repository at your working directory. Make real, working changes — no placeholders. Prefer small, verifiable commits of progress. Working directory: {cwd}",
+          "cwd": "{cwd}",
+          "verify": "npx tsc --noEmit",
+          "timeoutSecs": 5400
+        }
+      ]
+    },
+    {
+      "label": "verify",
+      "lanes": [
+        {
+          "id": "verify",
+          "driver": "codex",
+          "prompt": "You are the Praxis overnight VERIFY lane. The BUILD lane just implemented: {goal}\n\nIn the repository at your working directory, review what changed, run the project's own checks/tests, and FIX any breakage you find (type errors, failing tests, obvious regressions). Do not add new scope — only make the build's work correct and green. Working directory: {cwd}",
+          "cwd": "{cwd}",
+          "verify": "npx tsc --noEmit",
+          "timeoutSecs": 3600
+        }
+      ]
+    },
+    {
+      "label": "report",
+      "lanes": [
+        {
+          "id": "report",
+          "driver": "claude",
+          "model": "sonnet",
+          "prompt": "You are the Praxis overnight REPORT lane. Goal that was worked on tonight: {goal}\n\nIn the repository at your working directory, summarize what actually changed (git diff / git log since the session start), what is verified working, what still needs Zach's attention, and any decisions he should make. Write the summary to overnight-report.md in the working directory. Working directory: {cwd}",
+          "cwd": "{cwd}",
+          "timeoutSecs": 1200
+        }
+      ]
+    }
+  ]
+}

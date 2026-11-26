@@ -1,0 +1,47 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# build output
+dist
+dist-ssr
+*.local
+
+# rust / tauri
+src-tauri/target
+src-tauri/gen/schemas
+
+# editor / os
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+Thumbs.db
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs
+*.log
+
+# env / secrets (never commit them - the Groq key lives in %LOCALAPPDATA%\Praxis\groq.key,
+# outside the repo, but block stray keys defensively)
+.env
+.env.*
+!.env.example
+*.key
+
+# verification artifacts
+/verify-shots
+
+# generated from personal memory files (regenerate: scripts/build-memory-graph.cjs)
+/public/memory-graph.json
+
