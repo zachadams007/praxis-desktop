@@ -1,0 +1,43 @@
+/* FitScaler - uniform-scale letterbox wrapper. See FitScaler.tsx for the why. */
+
+.fit-scaler-outer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+/* Brain window: the canvas layer already fills the window, so the outer wrapper
+   itself must not paint an opaque background over it. */
+.fit-scaler-outer--transparent {
+  background: transparent;
+}
+
+.fit-scaler-inner {
+  position: absolute;
+  transform-origin: top left;
+  /* width/height/left/top/transform set inline per-frame (computed scale). */
+}
+
+/* Brain window's HUD layer floats above the unscaled canvas layer beneath it. */
+.fit-scaler-inner--chrome {
+  z-index: 1;
+  /* Let clicks fall through the letterboxed margins around the scaled HUD to the
+     canvas underneath (e.g. empty-space click → focus(null)); the HUD's own
+     interactive panels re-enable pointer events on themselves via app CSS, same
+     as they do today when unscaled. */
+  pointer-events: none;
+}
+
+.fit-scaler-inner--chrome > * {
+  pointer-events: auto;
+}
+
+.fit-scaler-canvas-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

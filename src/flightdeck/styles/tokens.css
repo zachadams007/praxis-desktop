@@ -1,0 +1,81 @@
+/* Flight Deck - design tokens. Palette B "Praxis neural" (flat fills, no neon). */
+:root {
+  /* Surfaces */
+  --panel: #0a0e14; /* app background / panels */
+  --panel-2: #0c121a; /* slightly raised panel */
+  --card: #121a22; /* cards */
+  --card-2: #16202a; /* hovered / nested card */
+  --line: #1c2731; /* hairline borders */
+  --line-soft: #16202a;
+
+  /* Text */
+  --text: #e6f6f3; /* primary light text */
+  --muted: #84a6a3; /* secondary / muted */
+  --faint: #51686b; /* tertiary / disabled */
+
+  /* Accents */
+  --teal: #2fe0c6; /* primary accent */
+  --teal-ink: #06342e; /* text on teal fills */
+  --magenta: #c06cff; /* secondary accent */
+  --magenta-ink: #1c0833;
+  --collision: #ff6b7a; /* collision / danger */
+  --collision-ink: #2a0a0f;
+
+  /* Status (liveness) */
+  --live: var(--teal);
+  --recent: #e8c170; /* warm amber - yellow tier */
+  --dormant: #3c4b52; /* dim grey */
+
+  /* Lane drivers - one hue per lane type so the fleet reads at a glance.
+     Integration is the warm gold "home base" the feeder lanes merge into. */
+  --driver-integration: #f4c66b; /* gold - the merge target */
+  --driver-max: #2fe0c6;         /* teal - Claude on Max (the brand accent) */
+  --driver-cursor: #7da2ff;      /* indigo - Cursor Composer */
+  --driver-codex: #6ee7a8;       /* mint - Codex offload */
+  --driver-cloud: #c06cff;       /* violet - Pro-account cloud (remote) */
+  --driver-claude: #9fb6c9;      /* steel - generic Claude lane */
+
+  --integ-tint: rgba(244, 198, 107, 0.13);
+  --cursor-tint: rgba(125, 162, 255, 0.13);
+  --codex-tint: rgba(110, 231, 168, 0.13);
+  --cloud-tint: rgba(192, 108, 255, 0.12);
+  --claude-tint: rgba(159, 182, 201, 0.1);
+
+  /* Tints (flat, low-alpha - used for fills, not glows) */
+  --teal-tint: rgba(47, 224, 198, 0.1);
+  --teal-tint-2: rgba(47, 224, 198, 0.16);
+  --magenta-tint: rgba(192, 108, 255, 0.12);
+  --amber-tint: rgba(232, 193, 112, 0.12);
+  --collision-tint: rgba(255, 107, 122, 0.12);
+  --collision-tint-2: rgba(255, 107, 122, 0.2);
+
+  /* Radii */
+  --r-sm: 7px;
+  --r-md: 11px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  /* Spacing scale (4px base) */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+
+  /* Type */
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono", "SF Mono", ui-monospace, "Cascadia Code", "Consolas", monospace;
+
+  /* Elevation (soft, not glow) */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.45);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 140ms;
+  --dur: 240ms;
+  --dur-slow: 420ms;
+}

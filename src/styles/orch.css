@@ -1,0 +1,359 @@
+/* Orchestrator panel v2 - rebuilt to the HUD v2 / Command Center design
+   language (see hud.css: .pane, .px-head). New class names (orch2-) so the
+   legacy .orch block in hud.css can't collide; that block is dead code the
+   orchestrator will delete later.
+
+   Anchor: fixed to the bottom-left corner (left 16px / bottom 80px), same as
+   the legacy panel. Expand/collapse animates width+height from that anchor,
+   so the panel visibly grows diagonally up-and-right when expanded - the
+   motion itself communicates "more room", no extra chrome needed. */
+
+.orch2 {
+  position: fixed;
+  left: 16px;
+  bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid color-mix(in srgb, var(--base-cool) 16%, var(--line));
+  border-radius: 3px;
+  background: linear-gradient(
+    170deg,
+    color-mix(in srgb, var(--bg) 82%, transparent),
+    color-mix(in srgb, var(--bg-deep) 92%, transparent)
+  );
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 26px 70px -30px rgba(0, 0, 0, 0.9),
+    0 0 30px -22px color-mix(in srgb, var(--base-cool) 55%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent);
+  z-index: 16;
+  overflow: hidden;
+}
+/* corner L-brackets - same family resemblance as .pane */
+.orch2::before,
+.orch2::after {
+  content: "";
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  pointer-events: none;
+  z-index: 1;
+}
+.orch2::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid color-mix(in srgb, var(--base-cool) 60%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--base-cool) 60%, transparent);
+}
+.orch2::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid color-mix(in srgb, var(--base-cool) 60%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--base-cool) 60%, transparent);
+}
+
+/* ---------- header ---------- */
+.orch2-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 8px 0 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+  background: color-mix(in srgb, var(--bg) 40%, transparent);
+  flex: none;
+}
+.orch2-tick {
+  width: 3px;
+  height: 11px;
+  flex: none;
+  background: var(--base-cool);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--base-cool) 65%, transparent);
+}
+.orch2-titles {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+.orch2-label {
+  flex: none;
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.orch2-caption {
+  flex: 1 1 auto;
+  min-width: 24px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--fs-sm);
+  color: color-mix(in srgb, var(--text) 34%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.orch2-headbtns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+.orch2-iconbtn {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+.orch2-iconbtn:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--base-cool) 45%, var(--line));
+  background: color-mix(in srgb, var(--base-cool) 8%, transparent);
+}
+.orch2-iconbtn:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+.orch2-iconbtn svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* ---------- message list ---------- */
+.orch2-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+.orch2-list::-webkit-scrollbar { width: 6px; }
+.orch2-list::-webkit-scrollbar-track { background: transparent; }
+.orch2-list::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 999px;
+}
+
+.orch2-clear-notice {
+  flex: none;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--base-cool) 28%, var(--line));
+  border-radius: 2px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  color: var(--text-dim);
+  background: color-mix(in srgb, var(--base-cool) 7%, transparent);
+}
+.orch2-clear-notice.is-error {
+  border-color: color-mix(in srgb, var(--accent-hot) 42%, var(--line));
+  color: color-mix(in srgb, var(--text) 86%, var(--accent-hot));
+  background: color-mix(in srgb, var(--accent-hot) 8%, transparent);
+}
+
+.orch2-empty {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 7px;
+  padding: 18px;
+  border: 1px dashed color-mix(in srgb, var(--base-cool) 24%, var(--line));
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--base-cool) 4%, transparent);
+}
+.orch2-empty-kicker {
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--base-cool);
+}
+.orch2-empty p {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-lg);
+  line-height: 1.35;
+  color: var(--text);
+}
+.orch2-empty > span:last-child {
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
+.orch2-msg {
+  max-width: 92%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.orch2-msg.from-orch { align-self: flex-start; }
+.orch2-msg.from-you { align-self: flex-end; }
+
+.orch2-bubble {
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 2px;
+}
+.orch2-msg.from-orch .orch2-bubble {
+  font-family: var(--font-serif);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text);
+  text-align: left;
+  background: color-mix(in srgb, var(--base-cool) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--base-cool) 18%, var(--line));
+}
+.orch2-msg.from-you .orch2-bubble {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text);
+  text-align: right;
+  background: color-mix(in srgb, var(--bg) 34%, transparent);
+  border: 1px solid var(--line);
+}
+
+.orch2-fly {
+  align-self: flex-start;
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  letter-spacing: 0.02em;
+  color: var(--base-cool);
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--base-cool) 35%, var(--line));
+  border-radius: 2px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.orch2-fly:hover {
+  background: color-mix(in srgb, var(--base-cool) 12%, transparent);
+  border-color: color-mix(in srgb, var(--base-cool) 60%, var(--line));
+}
+
+/* ---------- quick chips ---------- */
+.orch2-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 14px 10px;
+  flex: none;
+}
+.orch2-chip {
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.orch2-chip:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--base-cool) 45%, var(--line));
+}
+
+/* ---------- input row ---------- */
+.orch2-inputrow {
+  display: flex;
+  gap: 8px;
+  padding: 0 14px 12px;
+  flex: none;
+}
+.orch2-input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  color: var(--text);
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--bg-deep) 55%, transparent);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.orch2-input::placeholder {
+  color: color-mix(in srgb, var(--text-dim) 80%, transparent);
+}
+.orch2-input:focus {
+  border-color: color-mix(in srgb, var(--base-cool) 45%, var(--line));
+}
+.orch2-send {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  min-width: 34px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.orch2-send:hover:not(:disabled) {
+  color: var(--base-cool);
+  border-color: color-mix(in srgb, var(--base-cool) 45%, var(--line));
+  background: color-mix(in srgb, var(--base-cool) 8%, transparent);
+}
+.orch2-send:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ---------- footer ---------- */
+.orch2-foot {
+  padding: 8px 14px;
+  border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--fs-sm);
+  color: color-mix(in srgb, var(--text) 32%, transparent);
+  flex: none;
+}
+
+/* ---------- focus-visible on every interactive element ---------- */
+.orch2-iconbtn:focus-visible,
+.orch2-fly:focus-visible,
+.orch2-chip:focus-visible,
+.orch2-send:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--base-cool) 60%, transparent);
+  outline-offset: 2px;
+}
+.orch2-input:focus-visible {
+  border-color: color-mix(in srgb, var(--base-cool) 45%, var(--line));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--base-cool) 18%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orch2-fly,
+  .orch2-chip,
+  .orch2-send,
+  .orch2-iconbtn {
+    transition: none;
+  }
+}

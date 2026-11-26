@@ -1,0 +1,261 @@
+/*
+ * Command Center v2 - global foundation, ported 1:1 from the approved Claude Design
+ * package (Praxis Command Center.dc.html, 2026-07-05). Panels style themselves inline
+ * (same as the design reference); this file carries only what CSS must: fonts,
+ * reset, scrollbars, selection, placeholder, and the shared keyframes.
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap");
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #0a0908;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(73, 160, 244, 0.4);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(233, 220, 196, 0.14);
+  border: 2px solid #0a0908;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+input::placeholder {
+  color: rgba(233, 226, 211, 0.28);
+  font-style: italic;
+}
+
+/* healthy LED breathe */
+@keyframes pxPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* voice bars */
+@keyframes pxWave {
+  0%,
+  100% {
+    transform: scaleY(0.22);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* warning / acting */
+@keyframes pxBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* row just-changed flash */
+@keyframes pxFlash {
+  0% {
+    background: rgba(43, 226, 143, 0.14);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+/* T·IV arm ring */
+@keyframes pxArm {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Hover affordances the inline-style port can't express (design's style-hover). */
+.px-hover-row:hover {
+  background: #1a1712 !important;
+}
+.px-hover-inset:hover {
+  background: #161310 !important;
+}
+.px-hover-chip:hover {
+  border-color: rgba(233, 220, 196, 0.32) !important;
+}
+.px-hover-divider:hover {
+  background: #1d1a16 !important;
+}
+.px-hover-bright:hover {
+  filter: brightness(1.15);
+}
+.px-hover-border:hover {
+  border-color: rgba(233, 220, 196, 0.4) !important;
+  color: #e9e2d3 !important;
+}
+.px-hover-done:hover {
+  border-color: #49a0f4 !important;
+  background: rgba(73, 160, 244, 0.08) !important;
+}
+
+.px-voice-loading {
+  animation: pxPulse 1.8s ease-in-out infinite;
+}
+
+.px-voice-retry:focus-visible,
+.px-open:focus-visible,
+.px-inbox-x:focus-visible,
+.px-inbox-menu-btn:focus-visible,
+.px-inbox-undo button:focus-visible,
+.px-inbox-menu button:focus-visible {
+  outline: 2px solid #49a0f4;
+  outline-offset: 2px;
+}
+
+/* Inbox delete + the quiet ⋯ menu. The × is hidden until the row is hovered
+   or focused so a full inbox doesn't read as a column of controls. */
+.px-inbox-row { position: relative; }
+.px-inbox-x {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 1;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1;
+  color: rgba(233, 226, 211, 0.45);
+  background: #131110;
+  border: 1px solid transparent;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+}
+.px-inbox-row:hover .px-inbox-x,
+.px-inbox-row:focus-within .px-inbox-x,
+.px-inbox-x:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.px-inbox-x:hover,
+.px-inbox-x:focus-visible {
+  color: #e9e2d3;
+  border-color: rgba(233, 220, 196, 0.22);
+}
+.px-inbox-menu-btn {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  margin-right: 2px;
+  border: none;
+  background: transparent;
+  color: rgba(233, 226, 211, 0.4);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+.px-inbox-menu-btn:hover,
+.px-inbox-menu-btn[aria-expanded="true"] {
+  color: #e9e2d3;
+}
+.px-inbox-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 6;
+  min-width: 156px;
+  padding: 4px;
+  background: #0f0e0c;
+  border: 1px solid rgba(233, 220, 196, 0.12);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+.px-inbox-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(233, 226, 211, 0.62);
+  background: transparent;
+  border: none;
+  padding: 7px 8px;
+  cursor: pointer;
+}
+.px-inbox-menu button:hover:not(:disabled),
+.px-inbox-menu button:focus-visible {
+  color: #e9e2d3;
+  background: rgba(73, 160, 244, 0.08);
+}
+.px-inbox-menu button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.px-inbox-undo {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 14px;
+  border-bottom: 1px solid rgba(233, 220, 196, 0.06);
+  font-family: "Newsreader", Georgia, serif;
+  font-style: italic;
+  font-size: 11px;
+  color: rgba(233, 226, 211, 0.55);
+}
+.px-inbox-undo button {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: #8ecbff;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.px-inbox-undo button:hover { color: #e9e2d3; }
+
+.px-voice-retry:disabled {
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .px-voice-loading {
+    animation: none;
+  }
+}
+.px-hover-ask:hover {
+  border-color: #e8509d !important;
+  color: #f299c4 !important;
+}

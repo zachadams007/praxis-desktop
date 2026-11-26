@@ -1,0 +1,593 @@
+/**
+ * VoicePopup - Praxis corner widget. Bottom-right fixed overlay on the brain window.
+ * Scoped .vp-* so it never collides with .vo-* (VoiceOrb for secondary windows) or
+ * .voice-* (VoicePanel / Hud readout). Themed via --vp-accent (defaults to baseCool).
+ */
+
+/* ── Root anchor ─────────────────────────────────────────────────────────────── */
+.vp-root {
+  --vp-accent: var(--base-cool, #3b6cff);
+  --vp-bg: rgba(3, 7, 18, 0.72);
+  --vp-border: rgba(255, 255, 255, 0.10);
+  --vp-text: #eaf2ff;
+  --vp-dim: rgba(220, 232, 255, 0.55);
+  --vp-radius: 18px;
+  --vp-orb: 52px;
+
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  /* Keeps the popup above all panels but below native window chrome */
+}
+
+/* ── Orb button ──────────────────────────────────────────────────────────────── */
+.vp-orb {
+  position: relative;
+  width: var(--vp-orb);
+  height: var(--vp-orb);
+  border-radius: 50%;
+  border: 1.5px solid var(--vp-border);
+  background: var(--vp-bg);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  color: var(--vp-dim);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: color 0.2s, border-color 0.22s, box-shadow 0.28s, background 0.22s, transform 0.18s;
+  flex: none;
+}
+
+.vp-orb:hover {
+  color: var(--vp-text);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-2px);
+}
+
+.vp-orb:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.vp-orb:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--vp-accent) 70%, transparent);
+  outline-offset: 3px;
+}
+
+/* LISTENING - bright accent fill, glow */
+.vp-orb.listening {
+  color: #030712;
+  background: color-mix(in srgb, var(--vp-accent) 90%, transparent);
+  border-color: var(--vp-accent);
+  box-shadow:
+    0 0 0 0 color-mix(in srgb, var(--vp-accent) 40%, transparent),
+    0 6px 32px -4px color-mix(in srgb, var(--vp-accent) 60%, transparent);
+}
+
+/* THINKING - icon pulses */
+.vp-orb.thinking .vp-icon {
+  animation: vpThink 0.9s ease-in-out infinite;
+}
+
+/* ACTING - hot accent (orange-red spectrum) */
+.vp-orb.acting {
+  border-color: var(--accent, #ff5c47);
+  box-shadow: 0 6px 28px -4px color-mix(in srgb, var(--accent, #ff5c47) 55%, transparent);
+}
+
+/* SPEAKING - Praxis is talking; the orb is a live "stop" button (barge-in) */
+.vp-orb.speaking {
+  color: var(--vp-text);
+  border-color: var(--vp-accent);
+  box-shadow: 0 6px 28px -4px color-mix(in srgb, var(--vp-accent) 50%, transparent);
+}
+
+.vp-orb.speaking .vp-pulse {
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--vp-accent) 55%, transparent) 0%,
+    transparent 70%
+  );
+  animation: vpPulse 1.4s ease-out infinite;
+}
+
+.vp-orb.speaking .vp-icon {
+  animation: vpThink 1.2s ease-in-out infinite;
+}
+
+/* DONE - brief success flash handled via class + transition */
+.vp-orb.done {
+  border-color: var(--vp-accent);
+  box-shadow: 0 0 24px -4px color-mix(in srgb, var(--vp-accent) 45%, transparent);
+}
+
+/* ── Pulse ring ──────────────────────────────────────────────────────────────── */
+.vp-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.vp-orb.listening .vp-pulse {
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--vp-accent) 65%, transparent) 0%,
+    transparent 70%
+  );
+  animation: vpPulse 1.0s ease-out infinite;
+}
+
+.vp-orb.idle .vp-pulse {
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--vp-accent) 38%, transparent) 0%,
+    transparent 70%
+  );
+  animation: vpPulse 2.8s ease-out infinite;
+}
+
+@keyframes vpPulse {
+  0%   { transform: scale(1);    opacity: 0.6; }
+  70%  { opacity: 0; }
+  100% { transform: scale(2.2);  opacity: 0; }
+}
+
+@keyframes vpThink {
+  0%, 100% { opacity: 0.45; transform: scale(0.92); }
+  50%       { opacity: 1;    transform: scale(1); }
+}
+
+/* ── Icon layer ──────────────────────────────────────────────────────────────── */
+.vp-icon {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  transition: opacity 0.18s, transform 0.18s;
+}
+
+/* ── Status pill ─────────────────────────────────────────────────────────────── */
+.vp-pill {
+  /* a <button> now (the standing orb retired) - it IS the click surface for
+     send / cancel / barge-in while a voice cycle is live */
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 8px;
+  border-radius: 999px;
+  background: var(--vp-bg);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--vp-border);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--vp-dim);
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.vp-pill.live {
+  color: var(--vp-accent);
+  border-color: color-mix(in srgb, var(--vp-accent) 35%, transparent);
+}
+
+.vp-pill.acting {
+  color: var(--accent, #ff5c47);
+  border-color: color-mix(in srgb, var(--accent, #ff5c47) 35%, transparent);
+}
+
+.vp-pill.warn {
+  color: #ff8a8a;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.vp-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.vp-pill.live .vp-pill-dot {
+  animation: vpDotBlink 1.2s ease-in-out infinite;
+}
+
+@keyframes vpDotBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+/* ── Result card ─────────────────────────────────────────────────────────────── */
+.vp-card {
+  width: 280px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--vp-bg);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--vp-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vp-card-transcript {
+  font-size: 12px;
+  color: var(--vp-dim);
+  font-style: italic;
+  line-height: 1.4;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding-bottom: 8px;
+}
+
+.vp-card-result {
+  font-size: 13px;
+  color: var(--vp-text);
+  line-height: 1.45;
+}
+
+.vp-card-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vp-card-step {
+  font-size: 11px;
+  color: var(--vp-dim);
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.04);
+  border-left: 2px solid color-mix(in srgb, var(--vp-accent) 50%, transparent);
+  line-height: 1.35;
+}
+
+.vp-card-step.ok {
+  border-left-color: #34e0a0;
+}
+
+.vp-card-step.fail {
+  border-left-color: #ff5c47;
+}
+
+/* ── Action row (stop / dismiss) ──────────────────────────────────────────────── */
+.vp-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.vp-btn {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: transparent;
+  color: var(--vp-dim);
+  cursor: pointer;
+  transition: color 0.16s, border-color 0.16s, background 0.16s;
+}
+
+.vp-btn:hover {
+  color: var(--vp-text);
+  border-color: var(--vp-accent);
+}
+
+.vp-btn.stop {
+  border-color: color-mix(in srgb, var(--accent, #ff5c47) 50%, transparent);
+  color: var(--accent, #ff5c47);
+}
+
+.vp-btn.stop:hover {
+  background: color-mix(in srgb, var(--accent, #ff5c47) 12%, transparent);
+  border-color: var(--accent, #ff5c47);
+}
+
+.vp-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--vp-accent) 60%, transparent);
+  outline-offset: 2px;
+}
+
+/* ── Transcript bubble (live partial) ──────────────────────────────────────── */
+.vp-partial {
+  font-size: 12px;
+  color: var(--vp-text);
+  line-height: 1.4;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: rgba(12, 18, 32, 0.7);
+  border: 1px solid rgba(255,255,255,0.12);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  max-width: 260px;
+  text-align: right;
+}
+
+/* ── Hold-to-talk affordance hint ──────────────────────────────────────────── */
+.vp-hint {
+  font-size: 10px;
+  color: rgba(220, 232, 255, 0.3);
+  text-align: right;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Voice state indicator (.vsi-*) ────────────────────────────────────────────
+   The live-session confirmation pill - state, timer, transport, end. Replaces the
+   340px transcript panel that used to sit here; the conversation itself now renders
+   in the Atlas chat panel on the left, where the owner actually looks for it.
+
+   Same electric-dark tokens as .vp-* above, on the same bottom-right anchor, so the
+   two corner surfaces read as one family. Scoped .vsi-* so it can mount in any
+   Praxis window without colliding with that window's own classes. */
+.vsi-root {
+  --vsi-accent: var(--base-cool, #3b6cff);
+  --vsi-hot: var(--accent, #ff5c47);
+  --vsi-text: #eaf2ff;
+  --vsi-dim: rgba(220, 232, 255, 0.55);
+
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 62; /* above .vp-root (60) */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: min(340px, calc(100vw - 40px));
+  color: var(--vsi-text);
+  pointer-events: none; /* only the pill itself takes clicks */
+}
+
+.vsi-pill {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 7px 8px 7px 13px;
+  border-radius: 999px;
+  background: rgba(4, 8, 20, 0.82);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  backdrop-filter: blur(24px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 14px 40px -14px rgba(0, 0, 0, 0.7),
+    0 0 0 1px color-mix(in srgb, var(--vsi-accent) 10%, transparent);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* The "live seam" - a soft electric halo only while the mic is genuinely open. */
+.vsi-pill.live {
+  border-color: color-mix(in srgb, var(--vsi-accent) 30%, transparent);
+  box-shadow:
+    0 14px 40px -14px rgba(0, 0, 0, 0.7),
+    0 0 26px -10px color-mix(in srgb, var(--vsi-accent) 55%, transparent);
+}
+
+.vsi-pill.err {
+  border-color: color-mix(in srgb, var(--vsi-hot) 45%, transparent);
+  box-shadow:
+    0 14px 40px -14px rgba(0, 0, 0, 0.7),
+    0 0 24px -10px color-mix(in srgb, var(--vsi-hot) 50%, transparent);
+}
+
+/* ── State (equalizer + label) ─────────────────────────────────────────────── */
+.vsi-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--vsi-dim);
+  font: inherit;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  padding: 0;
+  cursor: default;
+  transition: color 0.2s ease;
+}
+
+.vsi-state.interruptible {
+  cursor: pointer;
+  color: var(--vsi-accent);
+}
+
+.vsi-state.interruptible:hover .vsi-label {
+  color: var(--vsi-text);
+}
+
+.vsi-state:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--vsi-accent) 60%, transparent);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.vsi-label {
+  text-transform: lowercase;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.vsi-pill.listening .vsi-state,
+.vsi-pill.hearing .vsi-state,
+.vsi-pill.speaking .vsi-state {
+  color: var(--vsi-accent);
+}
+
+.vsi-pill.acting .vsi-state,
+.vsi-pill.transcribing .vsi-state {
+  color: var(--vsi-hot);
+}
+
+.vsi-viz {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.5px;
+  height: 15px;
+  flex: none;
+}
+
+.vsi-bar {
+  width: 3px;
+  height: 5px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.vsi-pill.listening .vsi-bar,
+.vsi-pill.hearing .vsi-bar,
+.vsi-pill.speaking .vsi-bar,
+.vsi-pill.acting .vsi-bar,
+.vsi-pill.transcribing .vsi-bar {
+  animation: vsiEq 1s ease-in-out infinite;
+}
+
+.vsi-bar:nth-child(1) { animation-delay: 0s; }
+.vsi-bar:nth-child(2) { animation-delay: 0.18s; }
+.vsi-bar:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes vsiEq {
+  0%, 100% { height: 5px; opacity: 0.55; }
+  50% { height: 13px; opacity: 1; }
+}
+
+/* ── Timer + transport ─────────────────────────────────────────────────────── */
+.vsi-timer {
+  flex: none;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--vsi-dim);
+  letter-spacing: 0.04em;
+}
+
+.vsi-transport {
+  flex: none;
+  font-size: 8.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  padding: 3px 6px;
+  border-radius: 999px;
+  line-height: 1;
+  border: 1px solid transparent;
+}
+
+.vsi-transport.realtime {
+  color: #d7f7e6;
+  background: color-mix(in srgb, #22d38a 20%, transparent);
+  border-color: color-mix(in srgb, #22d38a 42%, transparent);
+}
+
+.vsi-transport.local {
+  color: var(--vsi-dim);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Mic / transport failure ──────────────────────────────────────────────── */
+.vsi-err {
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: #ff9b9b;
+  max-width: 240px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* ── End control ──────────────────────────────────────────────────────────── */
+.vsi-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--vsi-dim);
+  cursor: pointer;
+  transition: color 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+.vsi-close:hover {
+  color: var(--vsi-text);
+  background: color-mix(in srgb, var(--vsi-hot) 16%, transparent);
+  border-color: color-mix(in srgb, var(--vsi-hot) 45%, transparent);
+}
+
+.vsi-close:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--vsi-accent) 60%, transparent);
+  outline-offset: 2px;
+}
+
+/* ── Non-blocking transport notice (realtime → local fallback / cap hit) ───── */
+.vsi-notice {
+  pointer-events: auto;
+  max-width: 100%;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: right;
+  color: color-mix(in srgb, var(--vsi-hot) 55%, var(--vsi-text));
+  padding: 6px 11px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--vsi-hot) 12%, rgba(4, 8, 20, 0.8));
+  border: 1px solid color-mix(in srgb, var(--vsi-hot) 26%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.vsi-hint {
+  font-size: 10px;
+  color: rgba(220, 232, 255, 0.3);
+  text-align: right;
+  letter-spacing: 0.04em;
+  user-select: none;
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .vp-pulse,
+  .vp-icon,
+  .vp-pill-dot,
+  .vsi-bar {
+    animation: none !important;
+  }
+  .vp-orb,
+  .vsi-pill,
+  .vsi-state,
+  .vsi-close {
+    transition: none !important;
+  }
+}
+
+
+/* The assistant's name on the pill. One voice, always named. */
+.vsi-who {
+  flex: none;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--vsi-dim, rgba(233, 226, 211, 0.42));
+  padding-right: 2px;
+}

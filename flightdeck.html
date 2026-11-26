@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0e14'/%3E%3Crect x='10' y='10' width='12' height='12' rx='3' fill='%232fe0c6'/%3E%3C/svg%3E"
+    />
+    <title>Flight Deck</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      var _fdErr = function(msg, stack) {
+        document.getElementById('root').innerHTML = '';
+        document.body.style.cssText = 'margin:0;background:#0a0e14;color:#e6f6f3;padding:28px;font-family:monospace;font-size:13px;';
+        document.body.innerHTML = '<h2 style="margin:0 0 12px;color:#2fe0c6;font-size:16px">Flight Deck — load error</h2>' +
+          '<pre style="margin:0;white-space:pre-wrap;word-break:break-all;opacity:.85">' + (stack || msg) + '</pre>';
+      };
+      window.onerror = function(msg, src, line, col, err) { _fdErr(msg, err && err.stack); };
+      window.addEventListener('unhandledrejection', function(e) {
+        var r = e.reason; _fdErr(String(r), r && r.stack);
+      });
+    </script>
+    <script type="module" src="/src/flightdeck/main.tsx"></script>
+  </body>
+</html>

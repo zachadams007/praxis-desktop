@@ -1,0 +1,15 @@
+{
+  "name": "praxis-browser",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Praxis sovereign browser sidecar — a persistent headed Chromium driven by the Rust core (src-tauri/src/sovereign.rs) over a line-delimited JSON stdio protocol.",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs",
+    "postinstall-hint": "npx playwright install chromium"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  }
+}

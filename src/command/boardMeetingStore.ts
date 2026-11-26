@@ -1,0 +1,164 @@
+/**
+ * boardMeetingStore - scheduling + state for the Command Center's Board Meeting card.
+ *
+ * Scheduling contract (the owner's spec):
+ *   - Fires once daily at 6:00 LOCAL time.
+ *   - Catch-up on app start: if it's already past 6am today and today's digest is
+ *     missing, generate immediately (Praxis autostarts on boot, so a normal 6am fire
+ *     may be missed if the app wasn't open yet - this closes that gap).
+ *   - In-app only (a `setInterval` tick, checked against wall-clock) - NO Windows
+ *     Scheduled Task, per the build brief (the app is already resident via tray +
+ *     autostart, so in-app scheduling is sufficient and keeps this self-contained).
+ *
+ * State: the LATEST digest is cached in localStorage (`praxis.board.v1`) so the card
+ * shows something immediately on mount without waiting for a fresh generation, and so
+ * a second window (e.g. reopening Command Center) doesn't need to regenerate to display
+ * the same day's digest. The vault .md file remains the durable source of truth; this
+ * cache is purely a fast local mirror for the card.
+ */
+
+import { useCallback, useEffect, useState } from "react";
+import { mirrorSet } from "@/shared/persist";
+import { useAgentRoster } from "@/shared/agents";
+import { generateBoardMeeting, boardMeetingExistsToday, todayLocalDate, type BoardMeetingResult } from "@/orchestrator/boardMeeting";
+
+const STORAGE_KEY = "praxis.board.v1";
+const CHECK_INTERVAL_MS = 60_000; // wall-clock check cadence - cheap, no drift concerns
+const FIRE_HOUR_LOCAL = 6; // 6:00am local
+
+interface StoredBoard {
+  date: string;
+  digestMarkdown: string;
+  path: string;
+  hadData: boolean;
+  generatedAtMs: number;
+}
+
+function load(): StoredBoard | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as StoredBoard;
+  } catch {
+    return null;
+  }
+}
+
+function save(v: StoredBoard): void {
+  try {
+    const body = JSON.stringify(v);
+    localStorage.setItem(STORAGE_KEY, body);
+    mirrorSet(STORAGE_KEY, body);
+  } catch {
+    /* best-effort - private/storage-full */
+  }
+}
+
+function isPast6am(d: Date = new Date()): boolean {
+  return d.getHours() >= FIRE_HOUR_LOCAL;
+}
+
+export interface BoardMeetingState {
+  /** The latest cached digest, or null if none has ever been generated on this machine. */
+  latest: StoredBoard | null;
+  /** True while a generation is in flight (manual or scheduled). */
+  generating: boolean;
+  /** Last generation error message, if the most recent attempt failed. Cleared on success. */
+  error: string | null;
+  /** Manually (re)generate today's digest - also used by the "Regenerate" button. */
+  regenerate: () => Promise<void>;
+}
+
+/**
+ * useBoardMeeting - mounts the 6am scheduler + catch-up check, and exposes the latest
+ * digest for the Command Center card. Safe to mount multiple times (each instance runs
+ * its own timer) but intended as a single top-level hook in App.tsx, mirroring how
+ * useAgentRoster is called once and passed down.
+ */
+export function useBoardMeeting(): BoardMeetingState {
+  const { agents } = useAgentRoster();
+  const [latest, setLatest] = useState<StoredBoard | null>(load);
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const runGeneration = useCallback(async () => {
+    setGenerating(true);
+    setError(null);
+    try {
+      const result: BoardMeetingResult | null = await generateBoardMeeting(agents);
+      if (!result) {
+        setError("Board meeting unavailable — Praxis backend not reachable (dev browser or command missing).");
+        return;
+      }
+      const stored: StoredBoard = {
+        date: result.date,
+        digestMarkdown: result.digestMarkdown,
+        path: result.path,
+        hadData: result.hadData,
+        generatedAtMs: Date.now(),
+      };
+      save(stored);
+      setLatest(stored);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Board meeting generation failed.");
+    } finally {
+      setGenerating(false);
+    }
+  }, [agents]);
+
+  // Scheduler: catch-up on mount, then a 60s wall-clock tick that fires once at/after 6am
+  // if today's digest is still missing (covers both the on-time 6am case and the "app
+  // wasn't open yet at 6am" case in one code path - both just ask "is it past 6am AND is
+  // today's digest missing?").
+  useEffect(() => {
+    let cancelled = false;
+    let firedToday = false;
+
+    const maybeFire = async () => {
+      if (cancelled || firedToday || generating) return;
+      const today = todayLocalDate();
+      if (!isPast6am()) return;
+
+      // Fast path: already cached locally for today - no need to even ask Rust.
+      if (latest?.date === today) {
+        firedToday = true;
+        return;
+      }
+
+      const exists = await boardMeetingExistsToday(today);
+      if (cancelled) return;
+      if (exists) {
+        // Generated by a previous session today (or another window) but not cached
+        // locally here - don't regenerate, just mark today as covered. The card will
+        // still show the last cached digest; a manual "Regenerate" refreshes it.
+        firedToday = true;
+        return;
+      }
+
+      firedToday = true;
+      await runGeneration();
+    };
+
+    void maybeFire();
+    const id = window.setInterval(() => void maybeFire(), CHECK_INTERVAL_MS);
+
+    // Reset the daily latch shortly after local midnight so the NEXT day's 6am can fire
+    // (the interval above only ever fires once per firedToday=true per app session).
+    const midnightResetId = window.setInterval(() => {
+      const now = new Date();
+      if (now.getHours() === 0 && now.getMinutes() < 2) {
+        firedToday = false;
+      }
+    }, CHECK_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+      window.clearInterval(midnightResetId);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runGeneration/latest intentionally
+    // read fresh via closures re-created each effect run (agents roster + latest can change).
+  }, [runGeneration, latest?.date, generating]);
+
+  return { latest, generating, error, regenerate: runGeneration };
+}
